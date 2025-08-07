@@ -1,0 +1,63 @@
+name: Ubuntu Runner Demo
+
+on:
+  workflow_dispatch:
+  #schedule:
+    # Following POSIX cron syntax, run every Monday morning at 5:30 AM UTC
+    #   https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07
+    #- cron:   '30 5 * * 1'
+  push:
+    # branches: [ master ]
+  pull_request:
+    # branches: [ master ]
+
+env:
+  # Debian package search:  https://www.debian.org/distrib/packages
+  GCC_PACKAGE_NAME: gcc-14
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, ubuntu-24.04 ]
+    
+    steps:
+    - name: Get latest from version control
+      uses: actions/checkout@v4
+
+    - name: List the default GCC version
+      run:  gcc --version
+
+    - name: Check if GCC-15 is present
+      run:  which gcc-15 || true
+
+    - name: Add the Ubuntu Universe repository
+      run:  sudo add-apt-repository --yes universe
+
+    - name: Update build environment
+      run:  sudo apt-get --assume-yes update
+
+    - name: Install package from the Ubuntu Universe
+      run:  sudo apt-get --assume-yes install $GCC_PACKAGE_NAME
+
+    - name: Verify Ubuntu Universe package installation
+      run:  $GCC_PACKAGE_NAME --version
+
+    - name: List the installation location
+      run:  which $GCC_PACKAGE_NAME
+
+    - name: List the available alternatives selections
+      run:  update-alternatives --get-selections
+
+    - name: Update the GCC alternatives selections
+      run:  |
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 14
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 14
+
+    - name: List the available alternatives selections
+      run:  update-alternatives --get-selections
+
+    - name: List the default GCC version
+      run:  gcc --version
